@@ -2,7 +2,7 @@
 Solution to smart cities
 
 
-/assets/images/REFlexWater_logo.png
+/../images/REFlexWater_logo.png
 
 
 
