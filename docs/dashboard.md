@@ -8,17 +8,17 @@
 
 * If you don't have an account created, choose register new user.
 
-!(/images/account.png)
+![Create account](/images/account.png)
 
 
 # Login
 * If you have an account created, enter your username and password.
 
-!(/images/login.png)
+![Login](/images/login.png)
 
 
 # Dashboard
 
 * You will be taken to the Dashboard.
 
-!(/images/dashboard.png)
+![Dashboard](/images/dashboard.png)
