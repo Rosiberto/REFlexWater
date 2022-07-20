@@ -1,18 +1,18 @@
-#Accessing the REFlex Water web interface
+# Accessing the REFlex Water web interface
 
 * You can use your preferred web browser
 * Access: http://<REFlexWater_IP>:8500
 
 
-#Create account
+# Create account
 
 
 
 
 
 
-#Login
+# Login
 
 
 
-#Dashboard
+# Dashboard
