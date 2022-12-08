@@ -1,0 +1,153 @@
+version: "3.5"
+services:
+
+  # Orion is the context broker
+  orion:
+    image: fiware/orion:latest
+    hostname: orion
+    container_name: orion
+    depends_on:
+      - mongo      
+    networks:
+      - reflex
+    expose:
+      - "1026"
+    ports:
+      - "1026:1026"
+    command: -dbhost mongo -corsOrigin __ALL -logLevel DEBUG -noCache
+    
+  # Cygnus is configured to write context data
+  cygnus:
+    image: fiware/cygnus-ngsi:latest
+    hostname: cygnus
+    container_name: cygnus
+    depends_on:
+      - mongo      
+    networks:
+      - reflex
+    expose:
+      - "5080"
+    ports:
+      - "5080:5080" 
+      - "5050:5050"
+      - "5051:5051"
+    environment:
+      - "CYGNUS_MULTIAGENT=true"
+      - "CYGNUS_MONGO_HOSTS=mongo:27017"
+      - "CYGNUS_LOG_LEVEL=DEBUG"           
+      
+  # STH-Comet is persisting Short Term History 
+  sth:
+    image: fiware/sth-comet:latest
+    hostname: sth
+    container_name: sth
+    volumes:
+      - /home/ubuntu/sth/config.js:/opt/sth/config.js
+    depends_on:
+      - mongo
+    networks:
+      - reflex
+    expose:
+      - "8666"
+    ports:
+      - "8666:8666"
+    environment:
+      - STH_HOST=sth
+      - STH_PORT=8666
+      - DB_URI=mongo:27017
+      - LOGOPS_LEVEL=DEBUG
+      
+  # Engine Rule CEP
+  perseo-core:
+    image: fiware/perseo-core
+    container_name: core
+    hostname: perseo-core
+    environment:
+      - PERSEO_FE_URL=http://perseo-fe:9090
+      - MAX_AGE=6000
+    networks:
+      - reflex
+    depends_on:
+      - mongo
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+ 
+  # API Front end CEP 
+  perseo-fe:
+    image: fiware/perseo
+    hostname: perseo-fe
+    container_name: fe
+    networks:
+      reflex:            
+    expose:
+      - "9090"
+    depends_on:
+      - perseo-core
+    environment:
+      - PERSEO_MONGO_ENDPOINT=mongo:27017
+      - PERSEO_CORE_URL=http://perseo-core:8080
+      - PERSEO_LOG_LEVEL=debug
+      - PERSEO_ORION_URL=http://orion:1026/
+      - PERSEO_SMTP_HOST=smtp.gmail.com
+      - PERSEO_SMTP_SECURE=true
+      - PERSEO_SMTP_PORT=465
+      - PERSEO_SMTP_AUTH_USER=reflexwater2020@gmail.com
+      - PERSEO_SMTP_AUTH_PASS=xxxyyyzzz
+      - PERSEO_DEFAULT_SERVICE=tese
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+               
+  # API                
+  api:
+    image: rosiberto/api-reflexwater:latest
+    container_name: api
+    expose:
+      - "8500"
+    ports:
+      - "8500:8500"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks:
+      - reflex
+    depends_on:
+      - mongo 
+      - rabbitmq
+      - cygnus
+      - orion
+      - sth      
+              
+# Mensageria - Rabbitmq
+  rabbitmq:
+    image: rosiberto/rabbitmq-reflexwater:latest
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+        - 5672:5672
+        - 15672:15672    
+    networks:
+        - reflex
+     
+  # Databases
+  mongo:
+    image: mongo:3.6
+    hostname: mongo
+    container_name: mongo
+    networks:
+      - reflex
+    expose:
+      - "27017"
+    command: --bind_ip_all --smallfiles
+    volumes:
+      - mongo:/data
+  
+networks:
+  reflex:
+    driver: bridge
+    
+volumes:
+  mongo: ~
+  mysql: ~
